@@ -1,9 +1,0 @@
-alx_travel_app Requirements
-
-- mysqlclient
-- django
-- djangorestframework
-- django-cors-headers
-- django-environ
-- celery
-- drf-yasg
