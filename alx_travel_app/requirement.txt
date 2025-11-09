@@ -1,36 +1,48 @@
-Step-by-Step Setup Guide for Django ProjectBelow is a complete guide to set up the Django project alx_travel_app with the listings app, install the required dependencies, configure the database (using SQLite as default for simplicity; you can switch to PostgreSQL later), and integrate Swagger (via drf-yasg) for API documentation. I'll include all necessary commands and code snippets.PrerequisitesPython 3.8+ installed.
-pip and virtualenv installed (pip install virtualenv if needed).
-For RabbitMQ (Celery broker): Install RabbitMQ server separately (not via pip). On Ubuntu: sudo apt update && sudo apt install rabbitmq-server. On macOS: brew install rabbitmq. Start it with sudo systemctl start rabbitmq-server (Linux) or brew services start rabbitmq (macOS). Enable the management plugin if needed: rabbitmq-plugins enable rabbitmq_management.
+## alx_travel_app Requirements
 
-1. Create a Virtual Environment and Install DependenciesCreate a project directory and virtual environment to isolate dependencies.bash
+### Step-by-Step Setup Guide for Django Project
 
+Below is a complete guide to set up the Django project `alx_travel_app` with the `listings` app, install the required dependencies, configure the database (using SQLite as default for simplicity; you can switch to PostgreSQL later), and integrate Swagger (via `drf-yasg`) for API documentation. I'll include all necessary commands and code snippets.
+
+#### Prerequisites
+- Python 3.8+ installed.
+- pip and virtualenv installed (`pip install virtualenv` if needed).
+- For RabbitMQ (Celery broker): Install RabbitMQ server separately (not via pip). On Ubuntu: `sudo apt update && sudo apt install rabbitmq-server`. On macOS: `brew install rabbitmq`. Start it with `sudo systemctl start rabbitmq-server` (Linux) or `brew services start rabbitmq` (macOS). Enable the management plugin if needed: `rabbitmq-plugins enable rabbitmq_management`.
+
+#### 1. Create a Virtual Environment and Install Dependencies
+Create a project directory and virtual environment to isolate dependencies.
+
+```bash
 mkdir alx_travel_app_project
 cd alx_travel_app_project
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install --upgrade pip
+```
 
-Install the packages:bash
-
+Install the packages:
+```bash
 pip install django djangorestframework django-cors-headers celery drf-yasg
+```
+- `django`: Core framework.
+- `djangorestframework`: For building REST APIs.
+- `django-cors-headers`: For handling CORS in API requests.
+- `celery`: For asynchronous task processing (uses RabbitMQ as broker).
+- `drf-yasg`: For Swagger/OpenAPI documentation.
 
-django: Core framework.
-djangorestframework: For building REST APIs.
-django-cors-headers: For handling CORS in API requests.
-celery: For asynchronous task processing (uses RabbitMQ as broker).
-drf-yasg: For Swagger/OpenAPI documentation.
-
-Save dependencies to requirements.txt:bash
-
+Save dependencies to `requirements.txt`:
+```bash
 pip freeze > requirements.txt
+```
 
-2. Create the Django Project and Appbash
-
+#### 2. Create the Django Project and App
+```bash
 django-admin startproject alx_travel_app .
 python manage.py startapp listings
+```
 
 Your project structure should now look like:
-
+```
 alx_travel_app_project/
 ├── venv/
 ├── alx_travel_app/
@@ -48,12 +60,16 @@ alx_travel_app_project/
 │   └── views.py
 ├── manage.py
 └── requirements.txt
+```
 
-3. Configure the DatabaseDjango uses SQLite by default (no extra setup needed). If you prefer PostgreSQL:Install: pip install psycopg2-binary.
-Update settings.py (see below).
+#### 3. Configure the Database
+Django uses SQLite by default (no extra setup needed). If you prefer PostgreSQL:
+- Install: `pip install psycopg2-binary`.
+- Update `settings.py` (see below).
 
-Edit alx_travel_app/settings.py to add apps and basic configs. Here's the updated sections:python
+Edit `alx_travel_app/settings.py` to add apps and basic configs. Here's the updated sections:
 
+```python
 # alx_travel_app/settings.py
 
 import os
@@ -174,14 +190,18 @@ SWAGGER_SETTINGS = {
         },
     },
 }
+```
 
-Run migrations to set up the database:bash
-
+Run migrations to set up the database:
+```bash
 python manage.py makemigrations
 python manage.py migrate
+```
 
-4. Configure URLs for the Project and SwaggerEdit alx_travel_app/urls.py to include Swagger and app URLs:python
+#### 4. Configure URLs for the Project and Swagger
+Edit `alx_travel_app/urls.py` to include Swagger and app URLs:
 
+```python
 # alx_travel_app/urls.py
 
 from django.contrib import admin
@@ -210,9 +230,10 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
+```
 
-Create listings/urls.py for the app (basic placeholder):python
-
+Create `listings/urls.py` for the app (basic placeholder):
+```python
 # listings/urls.py
 
 from django.urls import path
@@ -221,9 +242,12 @@ from django.urls import path
 urlpatterns = [
     # Add your API endpoints here, e.g., path('listings/', views.ListingList.as_view()),
 ]
+```
 
-5. Set Up CeleryCreate celery.py in the project root (alx_travel_app/celery.py):python
+#### 5. Set Up Celery
+Create `celery.py` in the project root (`alx_travel_app/celery.py`):
 
+```python
 # alx_travel_app/celery.py
 
 import os
@@ -234,31 +258,35 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'alx_travel_app.settings')
 app = Celery('alx_travel_app')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
+```
 
-Update alx_travel_app/__init__.py:python
-
+Update `alx_travel_app/__init__.py`:
+```python
 # alx_travel_app/__init__.py
 
 from .celery import app as celery_app
 
 __all__ = ('celery_app',)
+```
 
-To run Celery (in a separate terminal):bash
-
+To run Celery (in a separate terminal):
+```bash
 celery -A alx_travel_app worker -l info
+```
 
-For Celery beat (scheduled tasks, if needed):bash
-
+For Celery beat (scheduled tasks, if needed):
+```bash
 celery -A alx_travel_app beat -l info
+```
 
-6. Test the SetupCreate a superuser: python manage.py createsuperuser
-Run the server: python manage.py runserver
-Visit http://127.0.0.1:8000/swagger/ to see Swagger docs (empty for now; add views to populate).
-Admin: http://127.0.0.1:8000/admin/
-CORS test: Use a frontend tool like Postman to hit /api/ endpoints.
+#### 6. Test the Setup
+- Create a superuser: `python manage.py createsuperuser`
+- Run the server: `python manage.py runserver`
+- Visit http://127.0.0.1:8000/swagger/ to see Swagger docs (empty for now; add views to populate).
+- Admin: http://127.0.0.1:8000/admin/
+- CORS test: Use a frontend tool like Postman to hit `/api/` endpoints.
 
-Next StepsAdd models/views/serializers in listings/ for actual functionality (e.g., travel listings).
-For production: Secure SECRET_KEY, set DEBUG=False, configure allowed CORS origins, use environment variables (e.g., via python-decouple).
-If switching to PostgreSQL: Create a DB, update credentials, and run migrations.
-
-This setup is ready for development. If you encounter issues, share error logs!
+#### Next Steps
+- Add models/views/serializers in `listings/` for actual functionality (e.g., travel listings).
+- For production: Secure SECRET_KEY, set DEBUG=False, configure allowed CORS origins, use environment variables (e.g., via `python-decouple`).
+- If switching to PostgreSQL: Create a DB, update credentials, and run migrations.
